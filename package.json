@@ -1,0 +1,27 @@
+{
+  "name": "vueStudy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "css-loader": "^0.21.0",
+    "exports-loader": "^0.6.3",
+    "style-loader": "^0.13.0",
+    "webpack": "^1.12.15",
+    "webpack-dev-server": "^1.16.2"
+  },
+  "dependencies": {
+    "css-loader": "^0.21.0",
+    "extract-text-webpack-plugin": "^1.0.1",
+    "html-webpack-plugin": "^2.26.0",
+    "jsx-loader": "^0.13.2",
+    "sass-loader": "^4.1.1",
+    "style-loader": "^0.13.1",
+    "url-loader": "^0.5.7"
+  }
+}
