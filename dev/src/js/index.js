@@ -1,38 +1,17 @@
-require.config({
-    baseUrl: "./../src/js",
-    paths: {
-        //libs
-        "zepto": "./modules/zepto.v1.1.6",
-        "vue": "./modules/vue",
-        // controller
-        "index":"./index"
-    },
-    shim:{
-        zepto: {
-            exports: 'Zepto'
-        },
-        vue: {
-            exports:'Vue'
-        },
-        index: {
-            deps: ['zepto','vue']
-        }
-    }
-});
+ require("./modules/zepto.v1.1.6.js");
+ var Vue = require("./modules/vue.js");
 
 
-requirejs(['zepto','vue'],function($,Vue){
+ var myComponent = Vue.extend({
+  template: '<div>This is my first component!</div>'
+ })
 
-    Vue.component('ceshi',{
-        template:'#myComponent'
-    });
-    new Vue({
-        el:'#app'
-    })
+ // 2.注册组件，并指定组件的标签，组件的HTML标签为<my-component>
+ Vue.component('my-component', myComponent)
 
-
-});
-
+ new Vue({
+  el: '#app'
+ });
 
 
 

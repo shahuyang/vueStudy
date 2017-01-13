@@ -1,3 +1,3 @@
-require("./../css/global.css")
-require("./../css/style.css")
-require("./highAssessment");
+require("./../css/global.css");
+require("./../css/style.css");
+require("./index");
