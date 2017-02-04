@@ -10,4 +10,4 @@ app.use(express.static("./dev"));
 //app.listen(80,"127.0.0.1");
 
 // 家里笔记本
-app.listen(80,"192.168.0.109");
+app.listen(8082,"192.168.0.103");

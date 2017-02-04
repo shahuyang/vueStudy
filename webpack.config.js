@@ -1,4 +1,4 @@
-var webpack = require('webpack')
+var webpack = require('webpack');
 // 自定义公共模块提取
 // var commonsPlugin = new webpack.optimize.CommonsChunkPlugin(/* chunkName= */'common', /* filename= */'common.js'); // 分析以下模块的共用代码, 单独打一个包到common.js
 var ExtractTextPlugin = require("extract-text-webpack-plugin"); // 单独打包CSS
