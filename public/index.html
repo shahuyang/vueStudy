@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+
+  </head>
+
+  <body>
+    <script src="/dist/umd/vue.js"></script>
+    <script type="text/javascript">
+      let vm = new Vue({
+        el: '#app',
+        data(){
+          return {
+            name: 'cyf',
+            age: 29,
+            action: 'love xuaner',
+            address: {
+              number: 12,
+              name: 'dfjy'
+            }
+          }
+        }
+      })
+
+      vm._data.age = {
+        age: 28
+      }
+      console.log(vm._data)
+    </script>
+  </body>
+</html>
