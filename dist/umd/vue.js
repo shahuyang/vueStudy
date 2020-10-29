@@ -184,6 +184,31 @@
     observe(data); // 
   }
 
+  // ast 语法树 使用 对象 来描述语法    虚拟dom 使用 对象 描述 dom 节点
+  function compileToFunction(template) {
+    console.log(template);
+    return function render() {};
+  }
+  // let root = {
+  //     tag: 'div',
+  //     attrs: [{
+  //         name: 'id',
+  //         value: 'app'
+  //     }],
+  //     parent: null,
+  //     type: 1,
+  //     children: {
+  //         tag: 'p',
+  //         attrs: [],
+  //         parent: root,
+  //         type: 1,
+  //         children: [{
+  //             text: 'hello',
+  //             type: 3
+  //         }]
+  //     }
+  // }
+
   function initMixin(Vue) {
     // 初始化流程
     Vue.prototype._init = function (options) {
@@ -192,6 +217,29 @@
       var vm = this;
       vm.$options = options;
       initState(vm); // 分割代码
+      // 如果传入了 el 属性，需要将页面渲染出来， 就要实现挂载流程
+
+      if (vm.$options.el) {
+        vm.$mount(vm.$options.el);
+      }
+    };
+
+    Vue.prototype.$mount = function (el) {
+      var vm = this;
+      var options = vm.$mount;
+      el = document.querySelector(el); // 默认 先会查找 有没有 render 没有 render 会用  template ， 没有 template 就用 el 中的内容
+
+      if (!options.render) {
+        // 对模板进行编译
+        var template = options.template;
+
+        if (!template && el) {
+          template = el.outerHTML; // 我们需要将 template 转化成  render 方法， vue 2.0 虚拟 dom
+        }
+
+        var render = compileToFunction(template);
+        options.render = render;
+      }
     };
   }
 

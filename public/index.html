@@ -5,6 +5,10 @@
   </head>
 
   <body>
+    <div id="app">
+      <p>{{name}}</p>
+      <span>{{age}}</span>
+    </div>
     <script src="/dist/umd/vue.js"></script>
     <script type="text/javascript">
       let vm = new Vue({
@@ -12,22 +16,21 @@
         data(){
           return {
             name: 'cyf',
-            members: [
-              {
-                name: 'xuan'
-              },
-              {
-                name: 'fei'
-              }
-            ]
+            age: 11
           }
         }
+        // ,render(){
+        // }
       })
 
-      vm._data.members.push({
-        name: 'chenx'
-      })
-      console.log(vm._data.members)
+
+      
+      
+      // render 函数
+      // render(){
+      //   return _c('div', { id: 'app'}, _c('p', undefined, _v(_s(name)), _c('span', undefined, _v(_s(age))) ))
+      // }
+
     </script>
   </body>
 </html>
