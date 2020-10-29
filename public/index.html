@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-
   </head>
 
   <body>
@@ -13,20 +12,22 @@
         data(){
           return {
             name: 'cyf',
-            age: 29,
-            action: 'love xuaner',
-            address: {
-              number: 12,
-              name: 'dfjy'
-            }
+            members: [
+              {
+                name: 'xuan'
+              },
+              {
+                name: 'fei'
+              }
+            ]
           }
         }
       })
 
-      vm._data.age = {
-        age: 28
-      }
-      console.log(vm._data)
+      vm._data.members.push({
+        name: 'chenx'
+      })
+      console.log(vm._data.members)
     </script>
   </body>
 </html>

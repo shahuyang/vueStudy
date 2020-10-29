@@ -12,3 +12,4 @@ export function initMixin(Vue){
     initState(vm) // 分割代码
   };
 }
+

@@ -45,6 +45,50 @@
   function isObject(data) {
     return _typeof(data) === 'object' && data !== 'null';
   }
+  function def(data, key, value) {
+    Object.defineProperty(data, key, {
+      enumerable: false,
+      configurable: false,
+      value: value
+    });
+  }
+
+  // 我要重写 数组的方法 push 、shift、 unshift、 pop、 reverse、sort 、splice
+  var oldArrayMethods = Array.prototype; // 原型链查找  先查找重写的 arrayMethods ，重写的没有，会继续向上查找
+  // value.__proto__ = arrayMethods
+  // arrayMethods.__proto__ = oldArrayMethods
+
+  var arrayMethods = Object.create(oldArrayMethods);
+  var methods = ['push', 'shift', 'unshift', 'pop', 'sort', 'splice', 'reverse'];
+  methods.forEach(function (method) {
+    arrayMethods[method] = function () {
+      console.log('用户调用了 push');
+
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      var result = oldArrayMethods[method].apply(this, args); // 调用了原生的方法
+      // push 添加的元素 可能还是一个对象
+
+      var inserted;
+      var ob = this.__ob__;
+
+      switch (method) {
+        case 'push':
+        case 'unshift':
+          inserted = args;
+          break;
+
+        case 'splice':
+          inserted = args.slice(2);
+      }
+
+      if (inserted) ob.observeArray(inserted); // 将新增属性 继续观测
+
+      return result;
+    };
+  });
 
   var Observe = /*#__PURE__*/function () {
     function Observe(value) {
@@ -52,10 +96,27 @@
 
       // vue 如果数据层次过多，需要递归的去解析 对象的属性 依次增加 set 和 get 方法
       // vue3 使用了 proxy 提高了性能
-      this.walk(value);
+      def(value, '__ob__', this);
+
+      if (Array.isArray(value)) {
+        // 如果是数组的话，不需要对 索引进行观察  因为有性能问题
+        // 前端开发一般通过 push 、 shift、unshift 操作数组  
+        value.__proto__ = arrayMethods; // 如果数组中是对象 ，我再监控
+
+        this.observeArray(value);
+      } else {
+        this.walk(value);
+      }
     }
 
     _createClass(Observe, [{
+      key: "observeArray",
+      value: function observeArray(value) {
+        for (var i = 0; i < value.length; i += 1) {
+          observe(value[i]);
+        }
+      }
+    }, {
       key: "walk",
       value: function walk(data) {
         var keys = Object.keys(data);
@@ -76,6 +137,7 @@
         return value;
       },
       set: function set(newValue) {
+        console.log("更新数据");
         if (newValue === value) return;
         observe(newValue); //用户设置的也可能是对象
 
