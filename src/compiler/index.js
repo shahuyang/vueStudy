@@ -23,13 +23,14 @@ function createASTElement(tagName, attrs){
 }
 
 
-function start(tagName, attrs){
+function start(tagName, attrs){ 
     // 遇到开始标签，创建 
     let element = createASTElement(tagName, attrs)
     if(!root){
         root = element
     }
     currentParent = element // 把当前元素 标记为 ast
+    stack.push(element)
 }
 function chars(text){
     text = text.replace(/\s/g, '')
@@ -42,7 +43,13 @@ function chars(text){
 }
 
 function end (tagName){
-    console.log('结束标签', tagName)
+    let element = stack.pop()
+    // 标识当前这个 p 是属于 div 这个儿子的
+    currentParent =  stack[stack.length-1]
+    if(currentParent){
+        element.parent = currentParent
+        currentParent.children.push(element)  // 实现了树的父子关系
+    }
 }
 
 function parseHTML(html){
@@ -70,7 +77,7 @@ function parseHTML(html){
         }
         if(text){
             advance(text.length)
-            chars(text)
+            chars(text) 
             continue
         }
     }
@@ -110,6 +117,7 @@ function parseHTML(html){
 // ast 语法树 使用 对象 来描述原生语法    虚拟dom 使用 对象 描述 dom 节点
 export function compileToFunction(template){
     console.log(template)
+    // 解析为  ast 树
     let root = parseHTML (template)
     console.log(root)
     return function render(){

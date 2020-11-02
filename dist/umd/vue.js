@@ -198,6 +198,8 @@
   var root = null; // ast 语法树 的树根
 
   var currentParent; // 标识当前父亲是谁
+
+  var stack = [];
   var ELEMENT_TYPE = 1;
   var TEXT_TYPE = 3;
 
@@ -220,6 +222,8 @@
     }
 
     currentParent = element; // 把当前元素 标记为 ast
+
+    stack.push(element);
   }
 
   function chars(text) {
@@ -234,7 +238,14 @@
   }
 
   function end(tagName) {
-    console.log('结束标签', tagName);
+    var element = stack.pop(); // 标识当前这个 p 是属于 div 这个儿子的
+
+    currentParent = stack[stack.length - 1];
+
+    if (currentParent) {
+      element.parent = currentParent;
+      currentParent.children.push(element); // 实现了树的父子关系
+    }
   }
 
   function parseHTML(html) {
@@ -310,7 +321,8 @@
 
 
   function compileToFunction(template) {
-    console.log(template);
+    console.log(template); // 解析为  ast 树
+
     var root = parseHTML(template);
     console.log(root);
     return function render() {};
