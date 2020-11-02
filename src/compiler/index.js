@@ -6,17 +6,44 @@ const attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s
 const startTagClose = /^\s*(\/?)>/; // 匹配标签结束的 >
 const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g
 
+let root = null;  // ast 语法树 的树根
+let currentParent;  // 标识当前父亲是谁
+let stack = []
+const ELEMENT_TYPE = 1
+const TEXT_TYPE = 3
+
+function createASTElement(tagName, attrs){
+    return {
+        tag: tagName,
+        type: ELEMENT_TYPE,
+        children: [],
+        attrs,
+        parent: null
+    }
+}
+
+
 function start(tagName, attrs){
-    console.log('开始标签:', tagName, '属性是:', attrs)
+    // 遇到开始标签，创建 
+    let element = createASTElement(tagName, attrs)
+    if(!root){
+        root = element
+    }
+    currentParent = element // 把当前元素 标记为 ast
 }
 function chars(text){
-    console.log('文本是', text)
+    text = text.replace(/\s/g, '')
+    if(text){
+        currentParent.children.push({
+            text,
+            type: TEXT_TYPE
+        })
+    }
 }
 
 function end (tagName){
     console.log('结束标签', tagName)
 }
-
 
 function parseHTML(html){
     while(html){
@@ -76,6 +103,7 @@ function parseHTML(html){
             return match
         }
     }
+    return root
 }
 
 
@@ -83,6 +111,7 @@ function parseHTML(html){
 export function compileToFunction(template){
     console.log(template)
     let root = parseHTML (template)
+    console.log(root)
     return function render(){
 
     }

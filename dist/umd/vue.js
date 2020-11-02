@@ -195,13 +195,42 @@
   var attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/; // 匹配属性的
 
   var startTagClose = /^\s*(\/?)>/; // 匹配标签结束的 >
+  var root = null; // ast 语法树 的树根
+
+  var currentParent; // 标识当前父亲是谁
+  var ELEMENT_TYPE = 1;
+  var TEXT_TYPE = 3;
+
+  function createASTElement(tagName, attrs) {
+    return {
+      tag: tagName,
+      type: ELEMENT_TYPE,
+      children: [],
+      attrs: attrs,
+      parent: null
+    };
+  }
 
   function start(tagName, attrs) {
-    console.log('开始标签:', tagName, '属性是:', attrs);
+    // 遇到开始标签，创建 
+    var element = createASTElement(tagName, attrs);
+
+    if (!root) {
+      root = element;
+    }
+
+    currentParent = element; // 把当前元素 标记为 ast
   }
 
   function chars(text) {
-    console.log('文本是', text);
+    text = text.replace(/\s/g, '');
+
+    if (text) {
+      currentParent.children.push({
+        text: text,
+        type: TEXT_TYPE
+      });
+    }
   }
 
   function end(tagName) {
@@ -275,12 +304,15 @@
         return match;
       }
     }
+
+    return root;
   } // ast 语法树 使用 对象 来描述原生语法    虚拟dom 使用 对象 描述 dom 节点
 
 
   function compileToFunction(template) {
     console.log(template);
     var root = parseHTML(template);
+    console.log(root);
     return function render() {};
   }
   /*{ <div id='app'>
