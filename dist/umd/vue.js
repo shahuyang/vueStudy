@@ -184,11 +184,72 @@
     observe(data); // 
   }
 
-  // ast 语法树 使用 对象 来描述语法    虚拟dom 使用 对象 描述 dom 节点
+  var ncname = "[a-zA-Z_][\\-\\.0-9_a-zA-Z]*"; // abc-aaa
+
+  var qnameCapture = "((?:".concat(ncname, "\\:)?").concat(ncname, ")"); // <aaa:b>
+
+  var startTagOpen = new RegExp("^<".concat(qnameCapture)); // 标签开头的正则 捕获的内容是标签名
+
+  var attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/; // 匹配属性的
+
+  var startTagClose = /^\s*(\/?)>/; // 匹配标签结束的 >
+
+  function parseHTML(html) {
+    while (html) {
+      var textEnd = html.indexOf('<');
+
+      if (textEnd === 0) {
+        // 如果当前索引为 0 ，肯定是一个标签 开始标签 或 结束标签
+        var startTagMatch = parseStartTag(); // 通过这个方法 获取匹配的结果  tagName   attrs
+
+        console.log(startTagMatch);
+        break;
+      }
+    }
+
+    function advance(n) {
+      html = html.substring(n);
+    }
+
+    function parseStartTag() {
+      var start = html.match(startTagOpen);
+      var match = {
+        tagName: start[1],
+        attrs: []
+      };
+
+      if (start) {
+        advance(start[0].length); // 将标签删除
+      }
+
+      var end, attr; // while 循环秒用  
+
+      while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
+        console.log(attr);
+        match.attrs.push({
+          name: attr[1],
+          value: attr[3] || attr[4] || attr[5]
+        });
+        advance(attr[0].length); // 将属性删除
+      }
+
+      if (end) {
+        advance(end[0].length);
+        return match;
+      }
+    }
+  } // ast 语法树 使用 对象 来描述原生语法    虚拟dom 使用 对象 描述 dom 节点
+
+
   function compileToFunction(template) {
     console.log(template);
+    var root = parseHTML(template);
     return function render() {};
   }
+  /*{ <div id='app'>
+      <p>hello</p>
+  </div> }*/
+  // ast 语法树
   // let root = {
   //     tag: 'div',
   //     attrs: [{
