@@ -6,14 +6,45 @@ const attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s
 const startTagClose = /^\s*(\/?)>/; // 匹配标签结束的 >
 const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g
 
+function start(tagName, attrs){
+    console.log('开始标签:', tagName, '属性是:', attrs)
+}
+function chars(text){
+    console.log('文本是', text)
+}
+
+function end (tagName){
+    console.log('结束标签', tagName)
+}
+
+
 function parseHTML(html){
     while(html){
         let textEnd = html.indexOf('<');
         if(textEnd === 0){
             // 如果当前索引为 0 ，肯定是一个标签 开始标签 或 结束标签
             let startTagMatch = parseStartTag() // 通过这个方法 获取匹配的结果  tagName   attrs
-            console.log(startTagMatch)
-            break
+            if(startTagMatch){ 
+                console.log(startTagMatch)
+                start(startTagMatch.tagName, startTagMatch.attrs)
+                continue
+            }
+            let endTagMatch = html.match(endTag)
+            if(endTagMatch){
+                advance(endTagMatch[0].length)
+                end(endTagMatch[1]);
+                continue
+            }
+
+        }
+        let text;
+        if(textEnd >= 0){
+            text = html.substring(0, textEnd)
+        }
+        if(text){
+            advance(text.length)
+            chars(text)
+            continue
         }
     }
 
@@ -22,6 +53,8 @@ function parseHTML(html){
     }
     function parseStartTag(){
         let start = html.match(startTagOpen)
+        if(!start) return ;
+
         const match = {
             tagName: start[1],
             attrs: []
@@ -32,7 +65,6 @@ function parseHTML(html){
         let end, attr
         // while 循环秒用  
         while((!(end = html.match(startTagClose))) && (attr = html.match(attribute))){
-            console.log(attr)
             match.attrs.push({
                 name: attr[1],
                 value: attr[3] || attr[4] || attr[5]
