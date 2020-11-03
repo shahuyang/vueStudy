@@ -1,117 +1,34 @@
-const ncname = `[a-zA-Z_][\\-\\.0-9_a-zA-Z]*`;    // abc-aaa
-const qnameCapture = `((?:${ncname}\\:)?${ncname})`;  // <aaa:b>
-const startTagOpen = new RegExp(`^<${qnameCapture}`); // 标签开头的正则 捕获的内容是标签名
-const endTag = new RegExp(`^<\\/${qnameCapture}[^>]*>`); // 匹配标签结尾的 </div>
-const attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/; // 匹配属性的
-const startTagClose = /^\s*(\/?)>/; // 匹配标签结束的 >
-const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g
 
-let root = null;  // ast 语法树 的树根
-let currentParent;  // 标识当前父亲是谁
-let stack = []
-const ELEMENT_TYPE = 1
-const TEXT_TYPE = 3
+import {parseHTML} from './parse-html'
 
-function createASTElement(tagName, attrs){
-    return {
-        tag: tagName,
-        type: ELEMENT_TYPE,
-        children: [],
-        attrs,
-        parent: null
+function genProps(attrs){
+    let str = ''
+    for(let i = 0; i < attrs.length; i += 1){
+        let attr = attrs[i]
+        if(attr.name === 'style'){
+            // style = "color: red"  =>  {style: { color: 'red })
+            let obj = {}
+            attr.value.split(';').forEach(item => {
+                let [key, value] = item.split(':')
+                obj[key] = value
+            });
+            attr.value = obj
+        }
+        str  += `${attr.name}: ${attr.value},`
     }
+    
+
+    return str
 }
 
+function generate(el) {
+    let code = `_c("${el.tag}",${ 
+        el.attrs.length ? genProps(el.attrs) : 'undefined'
+    })`
 
-function start(tagName, attrs){ 
-    // 遇到开始标签，创建 
-    let element = createASTElement(tagName, attrs)
-    if(!root){
-        root = element
-    }
-    currentParent = element // 把当前元素 标记为 ast
-    stack.push(element)
-}
-function chars(text){
-    text = text.replace(/\s/g, '')
-    if(text){
-        currentParent.children.push({
-            text,
-            type: TEXT_TYPE
-        })
-    }
+    return code
 }
 
-function end (tagName){
-    let element = stack.pop()
-    // 标识当前这个 p 是属于 div 这个儿子的
-    currentParent =  stack[stack.length-1]
-    if(currentParent){
-        element.parent = currentParent
-        currentParent.children.push(element)  // 实现了树的父子关系
-    }
-}
-
-function parseHTML(html){
-    while(html){
-        let textEnd = html.indexOf('<');
-        if(textEnd === 0){
-            // 如果当前索引为 0 ，肯定是一个标签 开始标签 或 结束标签
-            let startTagMatch = parseStartTag() // 通过这个方法 获取匹配的结果  tagName   attrs
-            if(startTagMatch){ 
-                console.log(startTagMatch)
-                start(startTagMatch.tagName, startTagMatch.attrs)
-                continue
-            }
-            let endTagMatch = html.match(endTag)
-            if(endTagMatch){
-                advance(endTagMatch[0].length)
-                end(endTagMatch[1]);
-                continue
-            }
-
-        }
-        let text;
-        if(textEnd >= 0){
-            text = html.substring(0, textEnd)
-        }
-        if(text){
-            advance(text.length)
-            chars(text) 
-            continue
-        }
-    }
-
-    function advance(n){
-        html = html.substring(n)
-    }
-    function parseStartTag(){
-        let start = html.match(startTagOpen)
-        if(!start) return ;
-
-        const match = {
-            tagName: start[1],
-            attrs: []
-        }
-        if(start){
-            advance( start[0].length)  // 将标签删除
-        }
-        let end, attr
-        // while 循环秒用  
-        while((!(end = html.match(startTagClose))) && (attr = html.match(attribute))){
-            match.attrs.push({
-                name: attr[1],
-                value: attr[3] || attr[4] || attr[5]
-            })
-            advance(attr[0].length)  // 将属性删除
-        }
-        if(end){
-            (advance(end[0].length))
-            return match
-        }
-    }
-    return root
-}
 
 
 // ast 语法树 使用 对象 来描述原生语法    虚拟dom 使用 对象 描述 dom 节点
@@ -119,35 +36,19 @@ export function compileToFunction(template){
     console.log(template)
     // 解析为  ast 树
     let root = parseHTML (template)
+
+    // 需要把 ast 语法树生成 render 函数 , 字符串拼接 （模板引擎）
+    // 将 ast 树，再次转换成 js 语法
     console.log(root)
+    let code = generate(root)
+
+    // <div id="app"><p>hello {{name}}</p> hello </div>
+    // _c("div", {id:app}, _c("p", undefined, _v('hello' + _s('name'))). _v(hello))
+
+    console.log(code)
+    // console.log(root)
     return function render(){
 
     }
 }
-
-
-/*{ <div id='app'>
-    <p>hello</p>
-</div> }*/
-
-// ast 语法树
-// let root = {
-//     tag: 'div',
-//     attrs: [{
-//         name: 'id',
-//         value: 'app'
-//     }],
-//     parent: null,
-//     type: 1,
-//     children: {
-//         tag: 'p',
-//         attrs: [],
-//         parent: root,
-//         type: 1,
-//         children: [{
-//             text: 'hello',
-//             type: 3
-//         }]
-//     }
-// }
 
