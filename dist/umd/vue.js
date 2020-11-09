@@ -398,6 +398,8 @@
   //     }
   // }
 
+  var defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g;
+
   function genProps(attrs) {
     var str = '';
 
@@ -420,14 +422,57 @@
         })();
       }
 
-      str += "".concat(attr.name, ": ").concat(attr.value, ",");
+      str += "".concat(attr.name, ": ").concat(JSON.stringify(attr.value), ",");
     }
 
-    return str;
+    return "{ ".concat(str.slice(0, -1), "}");
+  }
+
+  function genChildren(children) {
+    if (children.length > 0) {
+      return "".concat(children.map(function (c) {
+        return gen(c);
+      }).join(','));
+    } else {
+      return false;
+    }
+  } //  _c  创建元素   _v 创建文本节点    _s 解析 
+
+
+  function gen(node) {
+    if (node.type == 1) {
+      // 元素标签
+      return generate(node);
+    } else {
+      var text = node.text; //  a {{name}}  b {{age}}  c
+      // _v("a" + _s(name) + "b" + _s(age) + "c")
+      // 正则的 lastIndex 问题 exec() 
+
+      var tokens = [];
+      var match, index;
+      var lastIndex = defaultTagRE.lastIndex = 0;
+
+      while (match = defaultTagRE.exec(text)) {
+        index = match.index;
+
+        if (index > lastIndex) {
+          tokens.push(JSON.stringify(text.slice(lastIndex, index)));
+        }
+
+        tokens.push("s(".concat(match[1].trim(), ")"));
+        lastIndex = index + match[0].length;
+      }
+
+      if (lastIndex < text.length) {
+        tokens.push(JSON.stringify(text.slice(lastIndex, index)));
+      }
+
+      return "_v(".concat(tokens.join('+'), ")");
+    }
   }
 
   function generate(el) {
-    var code = "_c(\"".concat(el.tag, "\",").concat(el.attrs.length ? genProps(el.attrs) : 'undefined', ")");
+    var code = "_c(\"".concat(el.tag, "\",").concat(el.attrs.length ? genProps(el.attrs) : 'undefined').concat(el.children ? ",".concat(genChildren(el.children)) : '', ")");
     return code;
   } // ast 语法树 使用 对象 来描述原生语法    虚拟dom 使用 对象 描述 dom 节点
 
@@ -439,13 +484,20 @@
     // 将 ast 树，再次转换成 js 语法
 
     console.log(root);
-    var code = generate(root); // <div id="app"><p>hello {{name}}</p> hello </div>
+    var code = generate(root);
+    console.log(code); // <div id="app"><p>hello {{name}}</p> hello </div>
     // _c("div", {id:app}, _c("p", undefined, _v('hello' + _s('name'))). _v(hello))
+    // 所有的模板引擎实现，都要  new  Function with
+    // let renderFn = new Function()
 
-    console.log(code); // console.log(root)
-
-    return function render() {};
-  }
+    var renderFn = new Function("with(this){ return ".concat(code, " }"));
+    console.log(renderFn);
+    return renderFn;
+  } // function() {
+  //     with(this){
+  //         return   _c("div", {id:app}, _c("p", undefined, _v('hello' + _s('name'))). _v(hello))
+  //       }
+  // }
 
   function initMixin(Vue) {
     // 初始化流程
