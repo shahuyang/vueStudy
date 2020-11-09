@@ -108,6 +108,16 @@
       value: value
     });
   }
+  function proxy(vm, source, key) {
+    Object.defineProperty(vm, key, {
+      get: function get() {
+        return vm[source][key];
+      },
+      set: function set(newValue) {
+        vm[source][key] = newValue;
+      }
+    });
+  }
 
   // 我要重写 数组的方法 push 、shift、 unshift、 pop、 reverse、sort 、splice
   var oldArrayMethods = Array.prototype; // 原型链查找  先查找重写的 arrayMethods ，重写的没有，会继续向上查找
@@ -236,6 +246,11 @@
     data = typeof data == 'function' ? data.call(vm) : data;
     vm._data = data; // 对象劫持 用户改变了对象，我希望可以得到通知 刷新页面
     // MVVM 数据变化驱动视图变化
+    // 为了让用户更好的使用 我们希望用  vm.xxx 取值
+
+    for (var key in data) {
+      proxy(vm, '_data', key);
+    }
 
     observe(data); // 
   }
@@ -484,20 +499,48 @@
     // 将 ast 树，再次转换成 js 语法
 
     console.log(root);
-    var code = generate(root);
-    console.log(code); // <div id="app"><p>hello {{name}}</p> hello </div>
+    var code = generate(root); // console.log(code)
+    // <div id="app"><p>hello {{name}}</p> hello </div>
     // _c("div", {id:app}, _c("p", undefined, _v('hello' + _s('name'))). _v(hello))
     // 所有的模板引擎实现，都要  new  Function with
     // let renderFn = new Function()
 
     var renderFn = new Function("with(this){ return ".concat(code, " }"));
-    console.log(renderFn);
+    console.log(renderFn); // vue 的 renderFn 返回的是一个虚拟 dom
+
     return renderFn;
   } // function() {
   //     with(this){
   //         return   _c("div", {id:app}, _c("p", undefined, _v('hello' + _s('name'))). _v(hello))
   //       }
   // }
+
+  var Watcher = function Watcher() {
+    _classCallCheck(this, Watcher);
+  };
+
+  function lifecycleMixin(Vue) {
+    Vue.prototype._update = function (vnode) {};
+  }
+  function mountComponent(vm, el) {
+    var options = vm.$options;
+    vm.$el = el; // 真实的 dom 元素
+    // watcher 就是用来渲染的 
+    // vm._render 通过解析的 render 方法 渲染出虚拟 dom
+    // vm._update 就是通过虚拟 dom 创建真实的 dom
+    // 渲染页面
+    // 无论是渲染 还是 更新都会调用
+
+    var updateComponent = function updateComponent() {
+      // 
+      vm._updage(vm._render()
+      /**虚拟 dom  */
+      );
+    }; // 渲染 watcher 每一个组件都有一个 watcher
+
+
+    new Watcher(vm, updateComponent, function () {}, true); // true 标识它是一个 渲染 watcher
+  }
 
   function initMixin(Vue) {
     // 初始化流程
@@ -529,7 +572,33 @@
 
         var render = compileToFunction(template);
         options.render = render;
-      }
+      } // 渲染当前组件 挂载这个组件
+
+
+      mountComponent(vm, el);
+    };
+  }
+
+  function renderMixin(Vue) {
+    // _c 是创建元素的虚拟节点
+    // _v 创建文本的虚拟节点
+    // _s JSON.stringify
+    Vue.prototype._c = function () {
+      return createElement.apply(void 0, arguments); // 
+    };
+
+    Vue.prototype._v = function (text) {
+      return createTextNode(text);
+    };
+
+    Vue.prototype._s = function (val) {
+      return val === null ? '' : _typeof(val) === 'object' ? JSON.stringify(val) : val;
+    };
+
+    Vue.prototype._render = function () {
+      var vm = this;
+      var render = vm.$options.render;
+      render.call(vm); // 去实例上取值
     };
   }
 
@@ -542,6 +611,8 @@
 
 
   initMixin(Vue);
+  renderMixin(Vue);
+  lifecycleMixin(Vue);
 
   return Vue;
 

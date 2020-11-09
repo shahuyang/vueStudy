@@ -1,5 +1,6 @@
 import { initState } from './state'
 import { compileToFunction } from './compiler/index.js' 
+import { mountComponent } from './lifecycle.js'
 
 export function initMixin(Vue){
   // 初始化流程
@@ -34,8 +35,11 @@ export function initMixin(Vue){
       }
       const render = compileToFunction(template)
       options.render = render;
-
     }
+
+    // 渲染当前组件 挂载这个组件
+    mountComponent(vm, el)
+
   }
 }
 

@@ -87,8 +87,7 @@ export function compileToFunction(template){
     console.log(root)
 
     let code = generate(root)
-    console.log(code)
-
+    // console.log(code)
 
     // <div id="app"><p>hello {{name}}</p> hello </div>
     // _c("div", {id:app}, _c("p", undefined, _v('hello' + _s('name'))). _v(hello))
@@ -97,9 +96,10 @@ export function compileToFunction(template){
     // let renderFn = new Function()
     let renderFn = new Function(`with(this){ return ${code} }`) 
     console.log(renderFn)
+
+    // vue 的 renderFn 返回的是一个虚拟 dom
     return renderFn
 }
-
 
     // function() {
     //     with(this){

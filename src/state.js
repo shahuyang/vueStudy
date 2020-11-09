@@ -1,4 +1,5 @@
 import {observe} from './observe/index'
+import {proxy} from './util/index'
 
 export function initState(vm){
   const opts = vm.$options
@@ -23,6 +24,11 @@ export function initState(vm){
 
 function initProps(){}
 function initMethod(){}
+
+
+
+
+
 function initData(vm){
   // console.log(vm.$options.data)
   let data = vm.$options.data
@@ -30,6 +36,13 @@ function initData(vm){
   vm._data = data
   // 对象劫持 用户改变了对象，我希望可以得到通知 刷新页面
   // MVVM 数据变化驱动视图变化
+  // 为了让用户更好的使用 我们希望用  vm.xxx 取值
+  for(let key in data){
+    proxy(vm, '_data', key)
+  }
+
+
+
   observe(data) // 
 
 }
